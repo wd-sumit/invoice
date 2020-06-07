@@ -1,31 +1,20 @@
 const express = require('express');
-const Client = require('./models/clientModel');
+const clientRouter = require('./routes/clientRoutes');
+const userRouter = require('./routes/userRoutes');
+const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controller/errorController');
 
 const app = express();
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    console.log(process.env);
-    res.send('App has started');
+app.use('/api/v1/clients', clientRouter);
+app.use('/api/v1/users', userRouter);
+
+app.all('*', (req, res, next) => {
+    next(new AppError(`cannot find ${req.originalUrl} path on this server`, 404));
 });
 
-app.post('/api/v1/clients', async(req, res) => {
-  try { 
-    const newClient = await Client.create(req.body);
-
-    res.status(201).json({
-        success: true,
-        data: {
-            client: newClient
-        }
-    });
-} catch(err) {
-    res.status(500).json({
-        success: false,
-        error: err.name
-    });
-}
-})
+app.use(globalErrorHandler);
 
 module.exports = app;
